@@ -8,7 +8,8 @@ class InstType(enum.Enum):
     NONE = 0,
     CALL = 1,
     RETURN = 2,
-    MOVLRCALL = 3
+    MOVLRCALL = 3,
+    LDRPCRETURN = 4
 
 
 class Inst:
@@ -42,6 +43,8 @@ def printInst(insn, ras, verbose=True):
         type_str = 'MOVLRCALL'
     elif insn.type == InstType.RETURN:
         type_str = 'RETURN'
+    elif insn.type == InstType.LDRPCRETURN:
+        type_str = 'LDRPCRETURN'
     
     line = '\t' * len(ras) + hex(insn.pc) + " - " + type_str
     if verbose:
@@ -64,10 +67,12 @@ def main():
     staticCallNum = 0
     staticRetNum = 0
     staticMovLRNum = 0
+    staticLdrPCNum = 0
 
     dynamicCallNum = 0
     dynamicRetNum = 0
     dynamicMovLRNum = 0
+    dynamicLdrPCNum = 0
 
     ras = []
     insns = []
@@ -79,13 +84,15 @@ def main():
 
         if line.find("SYSCALL") != -1:
             staticMovLRNum += 1
+        elif line.find("SYSRETURN") != -1:
+            staticLdrPCNum += 1
         elif line.find("CALL") != -1:
             staticCallNum += 1
         elif line.find("RETURN") != -1:
             staticRetNum += 1
 
-    print("--- Static SYSCALL : CALL : RETURN = {} : {} : {} ---"
-        .format(staticMovLRNum, staticCallNum, staticRetNum))
+    print("--- Static SYSCALL : SYSRETURN : CALL : RETURN = {} : {} : {} : {} ---"
+        .format(staticMovLRNum, staticLdrPCNum, staticCallNum, staticRetNum))
 
     if start_sim_line_number == -1:
         print('**** REAL SIMULATION **** pattern not found')
@@ -96,6 +103,8 @@ def main():
         cur_insn = Inst()
         if 'SYSCALL' in line_words:
             cur_insn.type = InstType.MOVLRCALL
+        elif 'SYSRETURN' in line_words:
+            cur_insn.type = InstType.LDRPCRETURN
         elif 'CALL' in line_words:
             cur_insn.type = InstType.CALL
         elif 'RETURN' in line_words:
@@ -140,7 +149,7 @@ def main():
                 ras += [insn.pc + 4 if insn.type == InstType.CALL else insn.pc + 8]
                 printInst(insn=insn, ras=ras, verbose=verbose)
 
-        elif insn.type == InstType.RETURN:
+        elif insn.type == InstType.RETURN or insn.type == InstType.LDRPCRETURN:
             if insn.isTaken:
                 printInst(insn=insn, ras=ras, verbose=verbose)
                 ras_print = [hex(r) for r in ras]
