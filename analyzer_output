@@ -1,4 +1,5 @@
 --- Static SYSCALL : SYSRETURN : CALL : RETURN = 36 : 1 : 89 : 128 ---
+--- Dynamic SYSCALL : SYSRETURN : CALL : RETURN = 36 : 1 : 89 : 120 ---
 0x8150 - 
 0x8154 - 
 0x8158 - 

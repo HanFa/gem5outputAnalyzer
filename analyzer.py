@@ -142,15 +142,40 @@ def main():
 
         insns += [cur_insn]
 
+    for insn in insns:
+        if insn.isTaken:
+            if insn.type == InstType.CALL:
+                dynamicCallNum += 1
+            elif insn.type == InstType.MOVLRCALL:
+                dynamicMovLRNum += 1
+            elif insn.type == InstType.RETURN:
+                dynamicRetNum += 1
+            elif insn.type == InstType.LDRPCRETURN:
+                dynamicLdrPCNum += 1
+
+    print("--- Dynamic SYSCALL : SYSRETURN : CALL : RETURN = {} : {} : {} : {} ---"
+        .format(dynamicMovLRNum, dynamicLdrPCNum, dynamicCallNum, dynamicRetNum))
+
+
     verbose = True
     for insn in insns:
         if insn.type == InstType.CALL or insn.type == InstType.MOVLRCALL:
             if insn.isTaken:
+                if insn.type == InstType.CALL:
+                    dynamicCallNum += 1
+                elif insn.type == InstType.MOVLRCALL:
+                    dynamicMovLRNum += 1
+
                 ras += [insn.pc + 4 if insn.type == InstType.CALL else insn.pc + 8]
                 printInst(insn=insn, ras=ras, verbose=verbose)
 
         elif insn.type == InstType.RETURN or insn.type == InstType.LDRPCRETURN:
             if insn.isTaken:
+                if insn.type == InstType.RETURN:
+                    dynamicRetNum += 1
+                elif insn.type == InstType.LDRPCRETURN:
+                    dynamicLdrPCNum += 1
+
                 printInst(insn=insn, ras=ras, verbose=verbose)
                 ras_print = [hex(r) for r in ras]
                 print(ras_print)
@@ -159,7 +184,6 @@ def main():
 
         else:
             printInst(insn=insn, ras=ras, verbose=verbose)
-
 
 if __name__ == "__main__":
     main()
