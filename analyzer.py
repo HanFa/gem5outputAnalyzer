@@ -177,10 +177,13 @@ def main():
                     dynamicLdrPCNum += 1
 
                 printInst(insn=insn, ras=ras, verbose=verbose)
-                ras_print = [hex(r) for r in ras]
+                ras_print = [hex(r) for r in ras[-2:]]
                 print(ras_print)
                 returnPC = ras.pop()
-                # assert insns[insns.index(insn) + 1].pc == returnPC
+                if insns[insns.index(insn) + 1].pc != returnPC:
+                	print("RAS wrong\n")
+                	printInst(insn=insns[insns.index(insn) + 1], ras=ras, verbose=verbose)
+                assert insns[insns.index(insn) + 1].pc == returnPC
 
         else:
             printInst(insn=insn, ras=ras, verbose=verbose)
