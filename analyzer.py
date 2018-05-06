@@ -155,38 +155,43 @@ def main():
 
     print("--- Dynamic SYSCALL : SYSRETURN : CALL : RETURN = {} : {} : {} : {} ---"
         .format(dynamicMovLRNum, dynamicLdrPCNum, dynamicCallNum, dynamicRetNum))
+    print("--- Total CALL : RETURN = {} : {} ---"
+        .format(dynamicMovLRNum + dynamicCallNum, dynamicLdrPCNum + dynamicRetNum))
 
+    if (dynamicMovLRNum + dynamicCallNum) != (dynamicLdrPCNum + dynamicRetNum + 4):
+        verbose = True
+        for insn in insns:
+            if insn.type == InstType.CALL or insn.type == InstType.MOVLRCALL:
+                if insn.isTaken:
+                    if insn.type == InstType.CALL:
+                        dynamicCallNum += 1
+                    elif insn.type == InstType.MOVLRCALL:
+                        dynamicMovLRNum += 1
 
-    verbose = True
-    for insn in insns:
-        if insn.type == InstType.CALL or insn.type == InstType.MOVLRCALL:
-            if insn.isTaken:
-                if insn.type == InstType.CALL:
-                    dynamicCallNum += 1
-                elif insn.type == InstType.MOVLRCALL:
-                    dynamicMovLRNum += 1
+                    ras += [insn.pc + 4 if insn.type == InstType.CALL else insn.pc + 8]
+                    printInst(insn=insn, ras=ras, verbose=verbose)
 
-                ras += [insn.pc + 4 if insn.type == InstType.CALL else insn.pc + 8]
+            elif insn.type == InstType.RETURN or insn.type == InstType.LDRPCRETURN:
+                if insn.isTaken:
+                    if insn.type == InstType.RETURN:
+                        dynamicRetNum += 1
+                    elif insn.type == InstType.LDRPCRETURN:
+                        dynamicLdrPCNum += 1
+
+                    printInst(insn=insn, ras=ras, verbose=verbose)
+                    ras_print = [hex(r) for r in ras[-4:]]
+                    print(ras_print)
+                    returnPC = ras.pop()
+                    if insns[insns.index(insn) + 1].pc != returnPC:
+                        print("******************RAS wrong******************")
+                        printInst(insn=insns[insns.index(insn) + 1], ras=ras, verbose=verbose)
+                        printInst(insn=insns[insns.index(insn) + 2], ras=ras, verbose=verbose)
+                        printInst(insn=insns[insns.index(insn) + 3], ras=ras, verbose=verbose)
+                        printInst(insn=insns[insns.index(insn) + 4], ras=ras, verbose=verbose)
+                    assert insns[insns.index(insn) + 1].pc == returnPC
+
+            else:
                 printInst(insn=insn, ras=ras, verbose=verbose)
-
-        elif insn.type == InstType.RETURN or insn.type == InstType.LDRPCRETURN:
-            if insn.isTaken:
-                if insn.type == InstType.RETURN:
-                    dynamicRetNum += 1
-                elif insn.type == InstType.LDRPCRETURN:
-                    dynamicLdrPCNum += 1
-
-                printInst(insn=insn, ras=ras, verbose=verbose)
-                ras_print = [hex(r) for r in ras[-2:]]
-                print(ras_print)
-                returnPC = ras.pop()
-                if insns[insns.index(insn) + 1].pc != returnPC:
-                	print("RAS wrong\n")
-                	printInst(insn=insns[insns.index(insn) + 1], ras=ras, verbose=verbose)
-                assert insns[insns.index(insn) + 1].pc == returnPC
-
-        else:
-            printInst(insn=insn, ras=ras, verbose=verbose)
 
 if __name__ == "__main__":
     main()
